@@ -1,0 +1,293 @@
+" File: .vimrc
+" Author: gone369
+" Description: vimrc
+" Last Modified: September 01, 2014
+
+" When started as "evim", evim.vim will already have done these settings.
+if v:progname =~? "evim"
+    finish
+endif
+
+" Use Vim settings, rather than Vi settings (much better!).
+" This must be first, because it changes other options as a side effect.
+set nocompatible
+set splitbelow
+set splitright
+set background=dark
+set shiftwidth=4
+set tabstop=4
+set nobackup
+set nowb
+set noswapfile
+set smarttab
+set expandtab
+set ai
+set si
+set ffs=unix,dos,mac
+set encoding=utf8
+set wildmenu
+set wildmode=list:longest
+set title
+set scrolloff=3
+set cmdheight=2
+set number
+colorscheme koehler
+
+" allow backspacing over everything in insert mode
+set backspace=indent,eol,start
+
+"if has("vms")
+"  set nobackup		" do not keep a backup file, use versions instead
+"else
+"  set backup		" keep a backup file
+"endif
+set history=50		" keep 50 lines of command line history
+set ruler		" show the cursor position all the time
+set showcmd		" display incomplete commands
+set incsearch		" do incremental searching
+
+
+if has("gui_running")
+    set lines=56
+    set columns=140
+endif
+
+
+" For Win32 GUI: remove 't' flag from 'guioptions': no tearoff menu entries
+" let &guioptions = substitute(&guioptions, "t", "", "g")
+
+" Don't use Ex mode, use Q for formatting
+map Q gq
+
+" THIS AUTO RELOADS VIM when VIMRC is changed
+augroup reload_vimrc " {
+    autocmd!
+    autocmd BufWritePost $MYVIMRC source $MYVIMRC
+augroup END
+" }
+
+" CTRL-U in insert mode deletes a lot.  Use CTRL-G u to first break undo,
+" so that you can undo CTRL-U after inserting a line break.
+inoremap <C-U> <C-G>u<C-U>
+
+" In many terminal emulators the mouse works just fine, thus enable it.
+"if has('mouse')
+"set mouse=a
+"endif
+
+" ---------------------HIGHLIGHTING----------------------------
+" Switch syntax highlighting on, when the terminal has colors
+" Also switch on highlighting the last used search pattern.
+if &t_Co > 2 || has("gui_running")
+    syntax on
+    set hlsearch
+endif
+
+"---- deletes highlighting after search by pressing esc
+"nnoremap <silent> <CR> :nohl <cr><cr>
+
+" Only do this part when compiled with support for autocommands.
+"
+filetype plugin indent on
+if has("autocmd")
+
+    " Enable file type detection.
+    " Use the default filetype settings, so that mail gets 'tw' set to 72,
+    " 'cindent' is on in C files, etc.
+    " Also load indent files, to automatically do language-dependent indenting.
+
+    " Put these in an autocmd group, so that we can delete them easily.
+    augroup vimrcEx
+        au!
+
+        " For all text files set 'textwidth' to 78 characters.
+        autocmd FileType text setlocal textwidth=78
+
+        " When editing a file, always jump to the last known cursor position.
+        " Don't do it when the position is invalid or when inside an event handler
+        " (happens when dropping a file on gvim).
+        " Also don't do it when the mark is in the first line, that is the default
+        " position when opening a file.
+        autocmd BufReadPost *
+                    \ if line("'\"") > 1 && line("'\"") <= line("$") |
+                    \   exe "normal! g`\"" |
+                    \ endif
+
+    augroup END
+
+else
+    set autoindent		" always set autoindenting on
+endif " has("autocmd")
+
+"-------------------------------------VIMDIFF--------------------------------------------
+" Convenient command to see the difference between the current buffer and the
+" file it was loaded from, thus the changes you made.
+" Only define it when not defined already.
+if !exists(":DiffOrig")
+    command DiffOrig vert new | set bt=nofile | r ++edit # | 0d_ | diffthis
+                \ | wincmd p | diffthis
+endif
+nnoremap <silent> <Leader>df :call DiffToggle()<CR>
+
+function! DiffToggle()
+    if &diff
+        diffoff
+    else
+        diffthis
+    endif
+:endfunction
+"ignore whitespace difference
+set diffopt=iwhite
+
+set nomodeline
+
+if filereadable($HOME . "/.vimrc.info")
+    source ~/.vimrc.info
+else
+    set viminfo=""
+endif
+
+"html indentation
+let g:html_indent_inctags = "html,body,head,tbody"
+
+
+"----------------------------------------PLUGINS -------------------------
+"pathogen
+call pathogen#infect()
+"ctrl p
+"set runtimepath^=~/.vim/bundle/ctrlp.vim
+"nerd tree
+autocmd vimenter * if !argc() | NERDTree | endif
+map <C-n> :NERDTreeToggle <CR>
+"easy motion plugin
+map <Leader> <Plug>(easymotion-prefix)
+map / <Plug>(easymotion-sn)
+omap / <Plug>(easymotion-tn)
+map n <Plug>(easymotion-next)
+map N <Plug>(easymotion-prev)
+"syntastic
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_c_checkers= ['avrgcc','checkpatch','gcc','make']
+let g:syntastic_enable_c_checker = 1
+
+
+
+" my personal mappings
+"   
+"
+" for visual mode
+" pressing - or = in visual mode searches for the current selection
+vnoremap <silent> = :call VisualSelection('f')<CR>
+vnoremap <silent> - :call VisualSelection('b')<CR>
+
+""""""""""""""""""""""""
+" for moving around, tab,s windows and buffers
+""""""""""""""""""""""""
+
+" for searching
+nnoremap <C-f> :S//<left>
+inoremap <C-f> :S//<left>
+onoremap <C-f> :S//<left>
+"map <C-S-f> ?
+
+" for replacing
+
+nnoremap <C-r> :%S///gc<left><left><left><left>
+inoremap <C-r> :%S///gc<left><left><left><left>
+onoremap <C-r> :%S///gc<left><left><left><left>
+
+" for windows
+map <silent> <A-Up> :wincmd k<CR>
+map <silent> <A-Down> :wincmd j<CR>
+map <silent> <A-Left> :wincmd h<CR>
+map <silent> <A-Right> :wincmd l<CR>
+map <silent> <A-S-Up> :wincmd K<CR>
+map <silent> <A-S-Down> :wincmd J<CR>
+map <silent> <A-S-Left> :wincmd H<CR>
+map <silent> <A-S-Right> :wincmd L<CR>
+map <silent> <A-S-Down> :close <CR>
+
+" for tabs
+"
+map <silent> <C-Left> :tabp<CR>
+map <silent> <C-Right> :tabn<CR>
+map <C-Up> :tabnew <CR>
+
+map <silent> <C-S-Left> :tabm -1 <CR>
+map <silent> <C-S-Right> :tabm +1 <CR>
+
+
+" save tab
+map <C-Down> :wq<CR>
+"quit tab
+map <C-S-Down> :q!<CR>
+
+
+" for moving things after to next line
+map <silent> <S-o> a<CR><esc>
+
+" ctrl save
+map <C-s> :w <CR>
+
+" undo and redo
+
+nmap <silent> <C-z> :u <CR>
+nmap <silent> <C-y> :red <CR>
+
+" select all
+map <C-a> <esc>G$vgg
+
+" copy pasting to clipboard
+function! Paste(mode)
+    if a:mode == "v"
+        normal gv
+        normal "+P
+        normal l
+    elseif a:mode == "i"
+        set virtualedit=all
+        normal `^"+gP
+        let &virtualedit = ""
+    endif
+endfunction
+vnoremap <C-x> "+d
+vnoremap <C-c> "+y
+nnoremap <C-v> "+gPl
+vnoremap <C-v> :<C-U>call Paste("v")<CR>
+inoremap <C-v> <C-O>:call Paste("i")<CR>
+
+" visual block now mapped to Ctrl + B
+nnoremap <C-b> <C-v>
+
+" toggling folds
+" F9 Told single fold
+inoremap <F9> <C-O>za
+nnoremap <F9> za
+onoremap <F9> <C-C>za
+vnoremap <F9> zf
+"F7 open all folds
+inoremap <F7> zR
+nnoremap <F7> zR
+onoremap <F7> zR
+vnoremap <F7> zR
+"F8 close all folds
+inoremap <F8> zM
+nnoremap <F8> zM
+onoremap <F8> zM
+vnoremap <F8> zM
+" fold methods
+augroup vimrc
+    au BufReadPre * setlocal foldmethod=indent
+    au BufWinEnter * if &fdm == 'indent' | setlocal foldmethod=manual | endif
+augroup END
+
+" spell check
+nmap <leader>s :setlocal spell!<cr>
+autocmd FileType gitcommit setlocal spell
+autocmd FileType svn setlocal spell
+autocmd FileType asciidoc setlocal spell
+
+"trailing whitespaces
+nnoremap <Leader>rtw :%s/\s\+$//e<CR>
+
+
+
